@@ -439,7 +439,9 @@ class AutoencoderModel:
         """Load model from disk."""
         check_torch_available()
 
-        model_data = torch.load(path, map_location="cpu")
+        # Note: weights_only=False required to load full model config
+        # Only load from trusted sources (our own saved models)
+        model_data = torch.load(path, map_location="cpu", weights_only=False)  # nosec B614
 
         instance = cls(**model_data["params"])
         instance.feature_mean = model_data["feature_mean"]

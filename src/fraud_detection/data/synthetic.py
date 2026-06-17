@@ -135,6 +135,7 @@ class SyntheticTransactionGenerator:
         self.settings = settings or get_settings()
         self.anomaly_config = anomaly_config or AnomalyConfig()
         self.anomaly_config.validate()
+        self.seed = seed
 
         if seed is not None:
             np.random.seed(seed)
@@ -331,6 +332,11 @@ class SyntheticTransactionGenerator:
         Returns:
             DataFrame with synthetic transactions.
         """
+        # Reset seed for reproducibility on each generate() call
+        if self.seed is not None:
+            np.random.seed(self.seed)
+            random.seed(self.seed)
+
         logger.info(
             "Generating synthetic transactions",
             n_transactions=n_transactions,
@@ -338,9 +344,12 @@ class SyntheticTransactionGenerator:
         )
 
         if start_date is None:
-            start_date = datetime.now() - timedelta(days=90)
+            # Use fixed reference date for reproducibility when seed is set
+            ref_date = datetime(2024, 1, 1, 12, 0, 0) if self.seed is not None else datetime.now()
+            start_date = ref_date - timedelta(days=90)
         if end_date is None:
-            end_date = datetime.now()
+            ref_date = datetime(2024, 1, 1, 12, 0, 0) if self.seed is not None else datetime.now()
+            end_date = ref_date
 
         # Initialize entity pools
         self._initialize_pools(n_cards, n_customers)
@@ -382,7 +391,7 @@ class SyntheticTransactionGenerator:
                 "card_country": customer["home_country"],
                 "customer_id": customer["customer_id"],
                 "device_id": (
-                    f"device_{hashlib.md5(customer['customer_id'].encode()).hexdigest()[:8]}"
+                    f"device_{hashlib.md5(customer['customer_id'].encode(), usedforsecurity=False).hexdigest()[:8]}"
                 ),
                 "ip_address": self._generate_ip_address(),
                 "email_domain": customer["email_domain"],

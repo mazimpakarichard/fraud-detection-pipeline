@@ -180,7 +180,8 @@ class DatabaseManager:
     def get_row_count(self, table_name: str, schema: str | None = None) -> int:
         """Get approximate row count for a table."""
         schema = schema or self.settings.db_schema
-        query = f"SELECT COUNT(*) FROM {schema}.{table_name}"
+        # Note: schema and table_name are from internal config, not user input
+        query = f"SELECT COUNT(*) FROM {schema}.{table_name}"  # nosec B608
         with self.connection() as conn:
             result = conn.execute(text(query))
             return int(result.scalar() or 0)

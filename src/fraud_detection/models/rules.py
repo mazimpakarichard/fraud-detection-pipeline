@@ -88,11 +88,14 @@ class RuleBasedModel:
         scores = np.zeros(n_samples)
         all_reasons: list[list[dict[str, Any]]] = [[] for _ in range(n_samples)]
 
-        # Rule 1: High amount
+        # Rule 1: High amount - use log scaling for continuous differentiation
         if "amount" in df.columns:
             high_amount_mask = df["amount"] > self.amount_threshold
-            rule_score = (df["amount"] / self.amount_threshold).clip(0, 1).values
-            rule_score = np.where(high_amount_mask, rule_score, 0)
+            # Log scale allows differentiation between very high amounts
+            amount_ratio = df["amount"].values / self.amount_threshold
+            rule_score = np.log1p(amount_ratio) / np.log1p(10)  # Normalize to ~1 at 10x threshold
+            rule_score = np.clip(rule_score, 0, 1)
+            rule_score = np.where(high_amount_mask, rule_score, rule_score * 0.3)
             scores += rule_score * self.rule_weights["high_amount"]
 
             for i in np.where(high_amount_mask)[0]:
@@ -108,7 +111,10 @@ class RuleBasedModel:
         if "card_txn_count_1h" in df.columns:
             velocity_1h = df["card_txn_count_1h"].values
             velocity_mask = velocity_1h >= self.velocity_threshold_1h
-            rule_score = (velocity_1h / self.velocity_threshold_1h).clip(0, 1)
+            # Log scale for continuous differentiation
+            velocity_ratio = velocity_1h / self.velocity_threshold_1h
+            rule_score = np.log1p(velocity_ratio) / np.log1p(5)
+            rule_score = np.clip(rule_score, 0, 1)
             rule_score = np.where(velocity_mask, rule_score, rule_score * 0.5)
             scores += rule_score * self.rule_weights["velocity_1h"]
 

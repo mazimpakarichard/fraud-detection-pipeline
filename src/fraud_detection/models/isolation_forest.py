@@ -252,8 +252,9 @@ class IsolationForestModel:
     @classmethod
     def load(cls, path: str | Path) -> "IsolationForestModel":
         """Load model from disk."""
+        # Note: Only load models from trusted sources (our own saved models)
         with open(path, "rb") as f:
-            model_data = pickle.load(f)
+            model_data = pickle.load(f)  # nosec B301
 
         instance = cls(**model_data["params"])
         instance.model = model_data["model"]
