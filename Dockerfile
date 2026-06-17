@@ -1,6 +1,6 @@
 # Multi-stage Dockerfile for Fraud Detection Pipeline
 # Stage 1: Build environment
-FROM python:3.11-slim as builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -10,13 +10,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies
-COPY pyproject.toml ./
+# Copy source files needed for build
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+
+# Install Python dependencies and build wheel
 RUN pip install --no-cache-dir build && \
     pip wheel --no-cache-dir --wheel-dir=/app/wheels .
 
 # Stage 2: Runtime environment
-FROM python:3.11-slim as runtime
+FROM python:3.11-slim AS runtime
 
 WORKDIR /app
 

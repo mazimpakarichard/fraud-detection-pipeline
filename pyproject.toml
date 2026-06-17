@@ -7,7 +7,7 @@ name = "fraud-detection-pipeline"
 version = "1.0.0"
 description = "Production-grade transaction anomaly and fraud detection pipeline"
 readme = "README.md"
-license = {text = "MIT"}
+license = "MIT"
 requires-python = ">=3.10"
 authors = [
     {name = "Fraud Detection Team", email = "team@example.com"}
@@ -15,7 +15,6 @@ authors = [
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
