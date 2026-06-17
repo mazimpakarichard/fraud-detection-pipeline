@@ -129,8 +129,8 @@ jobs:
           context: .
           push: false
           tags: fraud-detection:${{ github.sha }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=build-${{ github.ref_name }}
+          cache-to: type=gha,mode=max,scope=build-${{ github.ref_name }}
 
   integration:
     name: Integration Tests
