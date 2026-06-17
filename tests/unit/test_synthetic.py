@@ -1,9 +1,8 @@
 """Tests for synthetic data generator."""
 
 import pytest
-import pandas as pd
 
-from fraud_detection.data.synthetic import SyntheticTransactionGenerator, AnomalyConfig
+from fraud_detection.data.synthetic import AnomalyConfig, SyntheticTransactionGenerator
 
 
 class TestSyntheticGenerator:
@@ -36,8 +35,13 @@ class TestSyntheticGenerator:
         df = generator.generate(n_transactions=100)
 
         required_cols = [
-            "transaction_id", "timestamp", "amount", "merchant_id",
-            "card_id", "is_fraud", "data_source"
+            "transaction_id",
+            "timestamp",
+            "amount",
+            "merchant_id",
+            "card_id",
+            "is_fraud",
+            "data_source",
         ]
         for col in required_cols:
             assert col in df.columns, f"Missing column: {col}"

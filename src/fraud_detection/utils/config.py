@@ -77,10 +77,7 @@ class Settings(BaseSettings):
     @property
     def database_url_masked(self) -> str:
         """Database URL with masked password for logging."""
-        return (
-            f"postgresql://{self.db_user}:****"
-            f"@{self.db_host}:{self.db_port}/{self.db_name}"
-        )
+        return f"postgresql://{self.db_user}:****@{self.db_host}:{self.db_port}/{self.db_name}"
 
     def ensure_directories(self) -> None:
         """Create required directories if they don't exist."""

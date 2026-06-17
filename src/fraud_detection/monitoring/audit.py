@@ -21,13 +21,13 @@ logger = get_logger(__name__)
 class AuditLogger:
     """
     Immutable audit logging for pipeline operations.
-    
+
     Logs all operations to fraud.audit_log table for:
     - Regulatory compliance
     - Debugging and troubleshooting
     - Performance monitoring
     """
-    
+
     OPERATIONS = {
         "EXTRACT": "Data extraction from source",
         "VALIDATE": "Data validation with Great Expectations",
@@ -36,13 +36,13 @@ class AuditLogger:
         "PERSIST": "Results persistence to database",
         "ALERT": "Alert generation",
     }
-    
+
     STATUSES = {"STARTED", "COMPLETED", "FAILED"}
-    
+
     def __init__(self, db_manager: DatabaseManager | None = None) -> None:
         """Initialize audit logger."""
         self.db_manager = db_manager or DatabaseManager()
-    
+
     def log(
         self,
         batch_id: str,
@@ -58,7 +58,7 @@ class AuditLogger:
     ) -> None:
         """
         Log an operation to audit table.
-        
+
         Args:
             batch_id: Batch identifier.
             operation: Operation type (EXTRACT, VALIDATE, etc.).
@@ -73,13 +73,14 @@ class AuditLogger:
         """
         if operation not in self.OPERATIONS:
             logger.warning(f"Unknown operation type: {operation}")
-        
+
         if status not in self.STATUSES:
             logger.warning(f"Unknown status: {status}")
-        
+
         import json
+
         metadata_json = json.dumps(metadata) if metadata else None
-        
+
         sql = """
             INSERT INTO fraud.audit_log (
                 batch_id, operation, status, records_processed, records_flagged,
@@ -89,7 +90,7 @@ class AuditLogger:
                 :duration_seconds, :error_message, :metadata::jsonb, :triggered_by, :source_system
             )
         """
-        
+
         params = {
             "batch_id": batch_id,
             "operation": operation,
@@ -102,7 +103,7 @@ class AuditLogger:
             "triggered_by": triggered_by,
             "source_system": source_system,
         }
-        
+
         try:
             self.db_manager.execute_sql(sql, params)
             logger.info(
@@ -119,7 +120,7 @@ class AuditLogger:
                 batch_id=batch_id,
                 operation=operation,
             )
-    
+
     def log_start(
         self,
         batch_id: str,
@@ -135,7 +136,7 @@ class AuditLogger:
             metadata=metadata,
         )
         return start_time
-    
+
     def log_complete(
         self,
         batch_id: str,
@@ -156,7 +157,7 @@ class AuditLogger:
             duration_seconds=duration,
             metadata=metadata,
         )
-    
+
     def log_failure(
         self,
         batch_id: str,
@@ -175,7 +176,7 @@ class AuditLogger:
             error_message=str(error),
             metadata=metadata,
         )
-    
+
     def get_batch_history(self, batch_id: str) -> list[dict[str, Any]]:
         """Get all audit entries for a batch."""
         sql = """
@@ -184,10 +185,10 @@ class AuditLogger:
             WHERE batch_id = :batch_id
             ORDER BY timestamp
         """
-        
+
         df = self.db_manager.read_sql(sql, {"batch_id": batch_id})
         return df.to_dict("records")
-    
+
     def get_recent_failures(self, hours: int = 24) -> list[dict[str, Any]]:
         """Get recent failed operations."""
         sql = """
@@ -197,6 +198,6 @@ class AuditLogger:
               AND timestamp >= NOW() - INTERVAL ':hours hours'
             ORDER BY timestamp DESC
         """
-        
+
         df = self.db_manager.read_sql(sql, {"hours": hours})
         return df.to_dict("records")

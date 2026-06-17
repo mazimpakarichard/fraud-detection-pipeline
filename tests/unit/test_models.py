@@ -1,31 +1,33 @@
 """Tests for fraud detection models."""
 
-import pytest
 import numpy as np
 import pandas as pd
+import pytest
 
-from fraud_detection.models.rules import RuleBasedModel
 from fraud_detection.models.isolation_forest import IsolationForestModel
+from fraud_detection.models.rules import RuleBasedModel
 
 
 @pytest.fixture
 def sample_features():
     """Create sample feature data."""
     n = 100
-    return pd.DataFrame({
-        "amount": np.random.lognormal(4, 1, n).round(2),
-        "amount_log": np.log1p(np.random.lognormal(4, 1, n)),
-        "hour_sin": np.sin(2 * np.pi * np.random.randint(0, 24, n) / 24),
-        "hour_cos": np.cos(2 * np.pi * np.random.randint(0, 24, n) / 24),
-        "is_night": np.random.choice([0, 1], n, p=[0.8, 0.2]),
-        "is_weekend": np.random.choice([0, 1], n, p=[0.7, 0.3]),
-        "suspicious_email": np.random.choice([0, 1], n, p=[0.95, 0.05]),
-        "country_mismatch": np.random.choice([0, 1], n, p=[0.9, 0.1]),
-        "high_risk_category": np.random.choice([0, 1], n, p=[0.85, 0.15]),
-        "is_online": np.random.choice([0, 1], n, p=[0.3, 0.7]),
-        "card_txn_count_1h": np.random.poisson(2, n),
-        "card_txn_count_24h": np.random.poisson(10, n),
-    })
+    return pd.DataFrame(
+        {
+            "amount": np.random.lognormal(4, 1, n).round(2),
+            "amount_log": np.log1p(np.random.lognormal(4, 1, n)),
+            "hour_sin": np.sin(2 * np.pi * np.random.randint(0, 24, n) / 24),
+            "hour_cos": np.cos(2 * np.pi * np.random.randint(0, 24, n) / 24),
+            "is_night": np.random.choice([0, 1], n, p=[0.8, 0.2]),
+            "is_weekend": np.random.choice([0, 1], n, p=[0.7, 0.3]),
+            "suspicious_email": np.random.choice([0, 1], n, p=[0.95, 0.05]),
+            "country_mismatch": np.random.choice([0, 1], n, p=[0.9, 0.1]),
+            "high_risk_category": np.random.choice([0, 1], n, p=[0.85, 0.15]),
+            "is_online": np.random.choice([0, 1], n, p=[0.3, 0.7]),
+            "card_txn_count_1h": np.random.poisson(2, n),
+            "card_txn_count_24h": np.random.poisson(10, n),
+        }
+    )
 
 
 class TestRuleBasedModel:
@@ -43,11 +45,13 @@ class TestRuleBasedModel:
     def test_high_amount_detection(self):
         """Test high amount rule."""
         model = RuleBasedModel(amount_threshold=1000)
-        df = pd.DataFrame({
-            "amount": [500, 5000, 10000],
-        })
+        df = pd.DataFrame(
+            {
+                "amount": [500, 5000, 10000],
+            }
+        )
 
-        scores, reasons = model.score(df)
+        scores, _reasons = model.score(df)
 
         # Higher amounts should have higher scores
         assert scores[0] < scores[1] < scores[2]
@@ -55,11 +59,13 @@ class TestRuleBasedModel:
     def test_velocity_detection(self):
         """Test velocity rule."""
         model = RuleBasedModel(velocity_threshold_1h=3)
-        df = pd.DataFrame({
-            "card_txn_count_1h": [1, 5, 10],
-        })
+        df = pd.DataFrame(
+            {
+                "card_txn_count_1h": [1, 5, 10],
+            }
+        )
 
-        scores, reasons = model.score(df)
+        scores, _reasons = model.score(df)
 
         # Higher velocity should have higher scores
         assert scores[0] < scores[1] < scores[2]
@@ -67,7 +73,7 @@ class TestRuleBasedModel:
     def test_reason_codes_generated(self, sample_features):
         """Test that reason codes are generated for flagged transactions."""
         model = RuleBasedModel()
-        scores, reasons = model.score(sample_features)
+        _scores, reasons = model.score(sample_features)
 
         # At least some transactions should have reason codes
         has_reasons = sum(1 for r in reasons if len(r) > 0)

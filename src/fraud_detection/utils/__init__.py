@@ -1,7 +1,7 @@
 """Utility functions and configuration."""
 
 from fraud_detection.utils.config import Settings, get_settings
-from fraud_detection.utils.logging import get_logger, configure_logging
 from fraud_detection.utils.database import DatabaseManager
+from fraud_detection.utils.logging import configure_logging, get_logger
 
-__all__ = ["Settings", "get_settings", "get_logger", "configure_logging", "DatabaseManager"]
+__all__ = ["DatabaseManager", "Settings", "configure_logging", "get_logger", "get_settings"]

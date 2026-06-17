@@ -1,9 +1,7 @@
 """Command-line interface for fraud detection pipeline."""
 
-import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Optional
 
 import typer
 
@@ -22,14 +20,14 @@ logger = get_logger(__name__)
 @app.command()
 def generate(
     rows: int = typer.Option(100_000, help="Number of transactions to generate"),
-    output: Optional[Path] = typer.Option(None, help="Output path (parquet or csv)"),
+    output: Path | None = typer.Option(None, help="Output path (parquet or csv)"),
     seed: int = typer.Option(42, help="Random seed"),
     anomaly_rate: float = typer.Option(0.02, help="Anomaly injection rate"),
 ) -> None:
     """Generate synthetic transaction data."""
     configure_logging()
 
-    from fraud_detection.data.synthetic import SyntheticTransactionGenerator, AnomalyConfig
+    from fraud_detection.data.synthetic import AnomalyConfig, SyntheticTransactionGenerator
 
     typer.echo(f"Generating {rows:,} synthetic transactions...")
 
@@ -56,15 +54,16 @@ def generate(
 
 @app.command()
 def train(
-    data_path: Optional[Path] = typer.Option(None, help="Path to training data"),
+    data_path: Path | None = typer.Option(None, help="Path to training data"),
     use_synthetic: bool = typer.Option(True, help="Generate synthetic data if no path"),
     rows: int = typer.Option(100_000, help="Synthetic data rows"),
-    output_dir: Optional[Path] = typer.Option(None, help="Model output directory"),
+    output_dir: Path | None = typer.Option(None, help="Model output directory"),
 ) -> None:
     """Train ensemble fraud detection model."""
     configure_logging()
 
     import pandas as pd
+
     from fraud_detection.features.engineering import FeatureEngineer
     from fraud_detection.models.ensemble import EnsembleScorer
 
@@ -78,6 +77,7 @@ def train(
     elif use_synthetic:
         typer.echo(f"Generating {rows:,} synthetic transactions...")
         from fraud_detection.data.synthetic import SyntheticTransactionGenerator
+
         generator = SyntheticTransactionGenerator(seed=42)
         df = generator.generate(n_transactions=rows)
     else:
@@ -121,15 +121,16 @@ def train(
 
 @app.command()
 def score(
-    data_path: Optional[Path] = typer.Option(None, help="Path to data to score"),
-    model_dir: Optional[Path] = typer.Option(None, help="Model directory"),
-    output: Optional[Path] = typer.Option(None, help="Output path for scores"),
+    data_path: Path | None = typer.Option(None, help="Path to data to score"),
+    model_dir: Path | None = typer.Option(None, help="Model directory"),
+    output: Path | None = typer.Option(None, help="Output path for scores"),
     batch_size: int = typer.Option(10_000, help="Batch size for scoring"),
 ) -> None:
     """Score transactions with trained ensemble model."""
     configure_logging()
 
     import pandas as pd
+
     from fraud_detection.features.engineering import FastFeatureEngineer
     from fraud_detection.models.ensemble import EnsembleScorer
 
@@ -152,6 +153,7 @@ def score(
         # Generate some test data
         typer.echo("No data path provided, generating test data...")
         from fraud_detection.data.synthetic import SyntheticTransactionGenerator
+
         generator = SyntheticTransactionGenerator(seed=123)
         df = generator.generate(n_transactions=batch_size)
 
@@ -174,7 +176,7 @@ def score(
         typer.echo(f"Scores saved to {output}")
 
     # Summary
-    typer.echo(f"\nScoring complete:")
+    typer.echo("\nScoring complete:")
     typer.echo(f"  Total: {len(scores_df):,}")
     typer.echo(f"  Flagged: {results.is_flagged.sum():,} ({results.is_flagged.mean():.1%})")
     typer.echo(f"  Mean score: {results.scores.mean():.3f}")
@@ -182,12 +184,14 @@ def score(
 
     # Show top flagged
     if results.is_flagged.sum() > 0:
-        typer.echo(f"\nTop 5 flagged transactions:")
+        typer.echo("\nTop 5 flagged transactions:")
         top_indices = results.scores.argsort()[::-1][:5]
         for i, idx in enumerate(top_indices):
-            typer.echo(f"  {i+1}. {df.iloc[idx]['transaction_id']}: "
-                      f"score={results.scores[idx]:.3f}, "
-                      f"amount=${df.iloc[idx]['amount']:.2f}")
+            typer.echo(
+                f"  {i + 1}. {df.iloc[idx]['transaction_id']}: "
+                f"score={results.scores[idx]:.3f}, "
+                f"amount=${df.iloc[idx]['amount']:.2f}"
+            )
 
 
 @app.command()
@@ -199,6 +203,7 @@ def validate(
     configure_logging()
 
     import pandas as pd
+
     from fraud_detection.validation.expectations import TransactionValidator
 
     typer.echo(f"Loading data from {data_path}...")
@@ -221,7 +226,7 @@ def validate(
 @app.command()
 def init_db(
     schema_file: Path = typer.Option(Path("sql/001_schema.sql"), help="Schema SQL file"),
-    seed_file: Optional[Path] = typer.Option(None, help="Seed SQL file"),
+    seed_file: Path | None = typer.Option(None, help="Seed SQL file"),
 ) -> None:
     """Initialize database schema."""
     configure_logging()
@@ -248,7 +253,6 @@ def run_pipeline(
     """Run complete pipeline: generate -> validate -> train -> score."""
     configure_logging()
 
-    import pandas as pd
     from fraud_detection.data.synthetic import SyntheticTransactionGenerator
     from fraud_detection.features.engineering import FeatureEngineer
     from fraud_detection.models.ensemble import EnsembleScorer
@@ -284,11 +288,13 @@ def run_pipeline(
     scorer.fit(features)
 
     results = scorer.score_batch(features, batch_id="pipeline_run")
-    typer.echo(f"Flagged {results.is_flagged.sum():,} transactions ({results.is_flagged.mean():.1%})")
+    typer.echo(
+        f"Flagged {results.is_flagged.sum():,} transactions ({results.is_flagged.mean():.1%})"
+    )
 
     # 5. Evaluate
     typer.echo("\n[5/5] Evaluating performance...")
-    from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score
+    from sklearn.metrics import f1_score, precision_score, recall_score, roc_auc_score
 
     y_true = df["is_fraud"].astype(int).values
     y_pred = results.is_flagged.astype(int)
@@ -310,9 +316,11 @@ def run_pipeline(
     flagged_indices = results.scores.argsort()[::-1][:3]
     for idx in flagged_indices:
         txn = df.iloc[idx]
-        typer.echo(f"  - {txn['transaction_id']}: ${txn['amount']:.2f}, "
-                  f"score={results.scores[idx]:.3f}, "
-                  f"actual_fraud={txn['is_fraud']}")
+        typer.echo(
+            f"  - {txn['transaction_id']}: ${txn['amount']:.2f}, "
+            f"score={results.scores[idx]:.3f}, "
+            f"actual_fraud={txn['is_fraud']}"
+        )
         if results.reason_codes[idx]:
             for reason in results.reason_codes[idx][:2]:
                 typer.echo(f"      {reason.get('reason', 'N/A')}")

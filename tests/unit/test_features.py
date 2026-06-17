@@ -1,11 +1,12 @@
 """Tests for feature engineering."""
 
-import pytest
-import numpy as np
-import pandas as pd
 from datetime import datetime, timedelta
 
-from fraud_detection.features.engineering import FeatureEngineer, FastFeatureEngineer
+import numpy as np
+import pandas as pd
+import pytest
+
+from fraud_detection.features.engineering import FastFeatureEngineer, FeatureEngineer
 
 
 @pytest.fixture
@@ -14,19 +15,21 @@ def sample_transactions():
     n = 100
     base_date = datetime(2024, 1, 15, 12, 0, 0)
 
-    return pd.DataFrame({
-        "transaction_id": [f"txn_{i:04d}" for i in range(n)],
-        "timestamp": [base_date + timedelta(hours=i) for i in range(n)],
-        "amount": np.random.lognormal(4, 1, n).round(2),
-        "merchant_id": [f"merchant_{i % 10}" for i in range(n)],
-        "card_id": [f"card_{i % 20}" for i in range(n)],
-        "customer_id": [f"cust_{i % 15}" for i in range(n)],
-        "email_domain": ["gmail.com"] * 90 + ["tempmail.com"] * 10,
-        "billing_country": ["USA"] * 95 + ["GBR"] * 5,
-        "shipping_country": ["USA"] * 90 + ["CAN"] * 10,
-        "is_online": [True] * 80 + [False] * 20,
-        "merchant_category": ["grocery"] * 50 + ["electronics"] * 30 + ["jewelry"] * 20,
-    })
+    return pd.DataFrame(
+        {
+            "transaction_id": [f"txn_{i:04d}" for i in range(n)],
+            "timestamp": [base_date + timedelta(hours=i) for i in range(n)],
+            "amount": np.random.lognormal(4, 1, n).round(2),
+            "merchant_id": [f"merchant_{i % 10}" for i in range(n)],
+            "card_id": [f"card_{i % 20}" for i in range(n)],
+            "customer_id": [f"cust_{i % 15}" for i in range(n)],
+            "email_domain": ["gmail.com"] * 90 + ["tempmail.com"] * 10,
+            "billing_country": ["USA"] * 95 + ["GBR"] * 5,
+            "shipping_country": ["USA"] * 90 + ["CAN"] * 10,
+            "is_online": [True] * 80 + [False] * 20,
+            "merchant_category": ["grocery"] * 50 + ["electronics"] * 30 + ["jewelry"] * 20,
+        }
+    )
 
 
 class TestFeatureEngineer:
