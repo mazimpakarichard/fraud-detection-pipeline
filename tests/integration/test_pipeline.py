@@ -1,7 +1,5 @@
 """Integration tests for the fraud detection pipeline."""
 
-import pytest
-
 
 class TestPipelineIntegration:
     """Integration tests for the full pipeline."""
