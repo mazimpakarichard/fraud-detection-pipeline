@@ -1,0 +1,95 @@
+{
+  "batch_id": "pipeline_run",
+  "timestamp": "2026-06-17T15:39:18.825395",
+  "n_rows": 10000,
+  "success": true,
+  "expectations": [
+    {
+      "expectation": "expect_column_to_exist",
+      "kwargs": {
+        "column": "transaction_id"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "transaction_id"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_be_unique",
+      "kwargs": {
+        "column": "transaction_id"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_to_exist",
+      "kwargs": {
+        "column": "amount"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "amount"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_be_between",
+      "kwargs": {
+        "column": "amount",
+        "min_value": 0,
+        "max_value": 1000000
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_to_exist",
+      "kwargs": {
+        "column": "timestamp"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "timestamp"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_to_exist",
+      "kwargs": {
+        "column": "card_id"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "card_id"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_to_exist",
+      "kwargs": {
+        "column": "merchant_id"
+      },
+      "success": true
+    },
+    {
+      "expectation": "expect_column_values_to_not_be_null",
+      "kwargs": {
+        "column": "merchant_id"
+      },
+      "success": true
+    }
+  ],
+  "failed_expectations": []
+}

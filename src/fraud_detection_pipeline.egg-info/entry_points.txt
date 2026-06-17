@@ -1,0 +1,2 @@
+[console_scripts]
+fraud-cli = fraud_detection.cli:app

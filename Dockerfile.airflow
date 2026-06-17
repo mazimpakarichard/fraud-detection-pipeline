@@ -1,0 +1,25 @@
+# Airflow Dockerfile for Fraud Detection Pipeline
+FROM apache/airflow:2.7.3-python3.11
+
+USER root
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+USER airflow
+
+# Copy and install Python dependencies
+COPY --chown=airflow:root pyproject.toml /opt/airflow/
+COPY --chown=airflow:root src/ /opt/airflow/src/
+
+WORKDIR /opt/airflow
+
+# Install the fraud detection package
+RUN pip install --no-cache-dir -e . && \
+    pip install --no-cache-dir apache-airflow-providers-postgres
+
+# Set environment
+ENV PYTHONPATH=/opt/airflow/src
